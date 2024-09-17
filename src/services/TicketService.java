@@ -5,6 +5,7 @@ import dto.User;
 import state.Done;
 import state.InProgress;
 import state.Review;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class TicketService {
 
@@ -12,25 +13,40 @@ public class TicketService {
         return new Ticket(description, createdBy);
     }
 
+    private final ReentrantLock lock = new ReentrantLock();
+
     public void startProgress(Ticket ticket, User user) {
         boolean isFeasible = ticket.getTicketState().startProgress(ticket, user);
         if (isFeasible) {
-            ticket.setTicketState(new InProgress());
+            // Critical Section
+            lock.lock();
+            if (ticket.getTicketState().startProgress(ticket, user)) {
+                ticket.setTicketState(InProgress.getInstance());
+            }
+            lock.unlock();
         }
     }
 
     public void startReview(Ticket ticket, User user) {
         boolean isFeasible = ticket.getTicketState().startReview(ticket, user);
         if (isFeasible) {
-            ticket.setTicketState(new Review());
+            lock.lock();
+            if (ticket.getTicketState().startReview(ticket, user)) {
+                ticket.setTicketState(Review.getInstance());
+            }
+            lock.unlock();
         }
     }
 
     public void markDone(Ticket ticket, User user) {
         boolean isFeasible = ticket.getTicketState().markDone(ticket, user);
         if (isFeasible) {
-            ticket.setTicketState(new Done());
-            System.out.println(">>> You can try to delete the ticket here");
+            lock.lock();
+            if (ticket.getTicketState().markDone(ticket, user)) {
+                ticket.setTicketState(Done.getInstance());
+                System.out.println(">>> You can try to delete the ticket here");
+            }
+            lock.unlock();
         }
     }
 
