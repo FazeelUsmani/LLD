@@ -1,6 +1,5 @@
 import dto.Ticket;
 import dto.User;
-import enums.TicketState;
 import services.TicketService;
 
 public class Main {
@@ -10,7 +9,7 @@ public class Main {
         Ticket ticket = new Ticket("First Ticket", u1);
 
         TicketService ticketService = new TicketService();
-        ticketService.changeTicketState(ticket, TicketState.Review);
-        ticketService.changeTicketState(ticket, TicketState.InProgress);
+        ticketService.startProgress(ticket, u1);
+        ticketService.startReview(ticket, u1);
     }
 }
